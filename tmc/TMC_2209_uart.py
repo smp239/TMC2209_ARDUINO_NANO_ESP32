@@ -25,10 +25,17 @@ class TMC_UART:
 #-----------------------------------------------------------------------
 # constructor
 #-----------------------------------------------------------------------
-    def __init__(self, serialport, baudrate):
-        self.ser = UART(serialport, baudrate=115200, tx=16, rx=17) 
+    def __init__(self, serialport, baudrate, tx=16, rx=17):
+        """Initialize UART communication.
+
+        The ``tx`` and ``rx`` pins can be adapted for different boards.  The
+        defaults (16/17) match many ESP32 development boards but the Arduino
+        Nano ESP32 exposes different pins for UART.  Pass the correct pins when
+        creating the class if required.
+        """
+        self.ser = UART(serialport, baudrate=baudrate, tx=tx, rx=rx)
         self.mtr_id=0
-        self.ser.init(115200 , bits=8, parity=None, stop=1)
+        self.ser.init(baudrate , bits=8, parity=None, stop=1)
         #self.ser.timeout = 20000/baudrate            # adjust per baud and hardware. Sequential reads without some delay fail.
         self.communication_pause = 500/baudrate     # adjust per baud and hardware. Sequential reads without some delay fail.
 
@@ -39,7 +46,15 @@ class TMC_UART:
 # destructor
 #-----------------------------------------------------------------------
     def __del__(self):
-        self.ser.close()
+        """De-initialise the UART on garbage collection."""
+        try:
+            self.ser.deinit()
+        except AttributeError:
+            # ``deinit`` is the MicroPython API. Fallback in case ``close`` exists
+            try:
+                self.ser.close()
+            except AttributeError:
+                pass
 
 #-----------------------------------------------------------------------
 # this function calculates the crc8 parity bit
