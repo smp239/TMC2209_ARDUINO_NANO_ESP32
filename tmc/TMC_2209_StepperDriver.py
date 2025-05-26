@@ -74,9 +74,17 @@ class TMC_2209:
 #-----------------------------------------------------------------------
 # constructor
 #-----------------------------------------------------------------------
-    def __init__(self, pin_step, pin_dir, pin_en, baudrate=115200, serialport=2):
-        
-        self.tmc_uart = TMC_UART(serialport, baudrate)
+    def __init__(self, pin_step, pin_dir, pin_en, baudrate=115200, serialport=2,
+                 tx=16, rx=17):
+
+        """Create a new ``TMC_2209`` instance.
+
+        ``tx`` and ``rx`` specify the UART pins used to communicate with the
+        driver.  Override them if the defaults (16/17) do not match your
+        board's layout, e.g. on the Arduino Nano ESP32.
+        """
+
+        self.tmc_uart = TMC_UART(serialport, baudrate, tx=tx, rx=rx)
         self._pin_step = pin_step
         self._pin_dir = pin_dir
         self._pin_en = pin_en
@@ -102,7 +110,9 @@ class TMC_2209:
         if(self._loglevel >= Loglevel.info):
             print("TMC2209: Deinit")
         self.setMotorEnabled(False)
-        GPIO.cleanup() 
+        # ``machine.Pin`` does not provide a cleanup method as found on
+        # Raspberry Pi GPIO libraries. The pins simply remain configured as
+        # they were, so nothing needs to be done here.
 
 #-----------------------------------------------------------------------
 # set the loglevel. See the Enum Loglevel
